@@ -1,0 +1,74 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+x = np.linspace(-4, 4, 1000)
+
+
+def max_b(x):
+    return np.e ** (-x)
+
+
+def fermi_dirac(x):
+    alpha = 0
+    return 1 / ((np.e ** (x + alpha)) + 1)
+
+
+
+def bose_einstein(x):
+    alpha = 0
+    return 1 / (np.e ** (x + alpha) - 1)
+
+
+plt.plot(x, max_b(x), label="Maxwell-Boltzmann")
+plt.plot(x, bose_einstein(x), label="Bose-Einstein")
+plt.plot(x, fermi_dirac(x), label="Fermi-Dirac")
+plt.title("Distribution Functions")
+plt.xlabel("x")
+plt.ylabel("f(x)")
+plt.grid(ls="--")
+plt.legend()
+plt.show()
+
+# Scaling
+T=[10,100,1000,5000]
+k = 1.3*10**(-23)  # in ev
+eV = 1.6*10**(-19)
+f = max_b(x)
+for i in range(len(T)):
+    scale  = k*T[i]/eV
+    plt.plot(x*scale,f,label ="T ="+ str(T[i])+"K")
+plt.legend()
+plt.grid(ls="--")
+plt.ylim(0,20)
+plt.xlabel("Energy")
+plt.ylabel("Occupancy")
+plt.title("Maxwell-Botlzmann")
+plt.show()
+
+
+f = fermi_dirac(x)
+for i in range(len(T)):
+    scale  = k*T[i]/eV
+    plt.plot(x*scale,f,label ="T =" + str(T[i])+"K")
+plt.legend()
+plt.grid(ls="--")
+plt.xlabel("Energy")
+plt.ylabel("Occupancy")
+plt.title("Fermi-Dirac")
+plt.show()
+
+
+x=np.linspace(0.0001,4,1000)
+f = bose_einstein(x)
+T=[50,100,1000,10000]
+for i in range(len(T)):
+    scale  = k*T[i]/eV
+    plt.plot(x*scale,f,label ="T ="+ str(T[i])+"K")
+plt.legend()
+plt.xlim(0,0.5)
+plt.ylim(0,30)
+plt.xlabel("Energy")
+plt.ylabel("Occupancy")
+plt.grid(ls="--")
+plt.title("Bose-Einstein")
+plt.show()

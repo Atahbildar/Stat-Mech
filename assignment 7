@@ -1,0 +1,139 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from scipy import integrate
+from sklearn.linear_model import LinearRegression
+
+v=np.linspace(20*10**(-3),50*10**(-3),10)
+T=np.linspace(150,450,10)
+k=1.38*10**(-23)
+N_A=6.023*10**(23)
+h=6.626*10**(-34)
+m=1.16*10**(-27)
+
+def z(v,t):
+    y=lambda x: (np.pi/2)*(x**2)* (np.e**((-(x**2)*(h**2))/(8*m*(v**(2/3))*k*t)))
+    I = integrate.quad(y, 0, 10 ** (11))
+    return I
+V=np.array(v)
+
+S=[]
+for i in v:
+    L=[]
+    for j in T:
+        L.append(z(i,j)[0])
+    plt.plot(T,np.log(np.array(L)),label="V="+str(i))
+    S.append(np.array(L))
+plt.grid()
+plt.title("Log plot of ln(z) vs T")
+plt.xlabel("Temperature")
+plt.legend()
+plt.ylabel("ln(z)")
+plt.show()
+S=np.array(S).T
+print(S)
+
+D=[]
+for i in v:
+    B=[]
+    for j in T:
+        B.append(z(i,j)[0])
+    plt.plot(np.log(np.array(T)),np.log(np.array(B)),label = "V="+str(i))
+    D.append(np.array(L))
+plt.grid()
+plt.title("Log plot of ln(z) vs ln(T)")
+plt.xlabel("Ln(T)")
+plt.legend()
+plt.ylabel("ln(z)")
+plt.show()
+
+
+for i in T:
+    O=[]
+    for j in v:
+        O.append(z(i,j)[0])
+    plt.plot(v,np.log(np.array(O)),label = "T="+str(i))
+plt.grid()
+plt.title("Log plot of ln(z) vs V")
+plt.xlabel("V")
+plt.legend()
+plt.ylabel("ln(z)")
+plt.show()
+
+A=[]
+for i in range(len(T)):
+    Z_diff= np.log(S[i,:][:-1]) - np.log(S[i,:][1:])
+    V_diff= v[:-1] - v[1:]
+    P= N_A * k* T[i] * (Z_diff/V_diff)
+    plt.plot(v[:-1],P,label='T='+str(T[i]))
+    A.append(P)
+plt.grid()
+plt.title('Volume vs Pressure')
+plt.xlabel('Volume')
+plt.ylabel('Pressure')
+plt.legend()
+plt.show()
+A=np.array(A).T
+
+df2=pd.DataFrame(A)
+print(df2)
+
+for i in range(len(V_diff)):
+    P=A[i,:]
+    plt.plot(T[1:],P[1:],label='V='+str(v[i]))
+plt.grid()
+plt.title("Temperature vs Pressure")
+plt.xlabel("Temperature")
+plt.legend()
+plt.ylabel("Pressure")
+plt.show()
+
+U=[]
+for i in range(len(v)):
+    Z_diff= np.log(S[:,i][:-1]) - np.log(S[:,i][1:])
+    T_diff= T[:-1] - T[1:]
+    E= k* (T[:-1]**2) * (Z_diff/T_diff)
+    plt.plot(T[:-1],E,label = "v="+str(v[i]))
+    print(E)
+    U.append(E*N_A)
+    U_array= np.array(U)
+    model = LinearRegression().fit(T_diff.reshape(-1, 1), E)
+    print("Slope (Cv):", model.coef_)
+
+plt.title('Energy VS Temperature')
+plt.xlabel("Temperature")
+plt.ylabel("Energy")
+plt.legend()
+plt.grid()
+plt.show()
+
+
+def entropy(U,T,Z):
+    term = N_A * k * (Z - np.log(N_A) + 1)
+    en = U/T + term
+    return en
+en_array=[]
+
+for i in range(len(T[:-1])):
+    en = entropy(U_array[i,:],T[:-1],np.log(S[:,i][:-1]))
+    en_array.append(en)
+    plt.plot(T[:-1],en,label = "V="+str(v[i]))
+plt.xlabel("Temperature")
+plt.ylabel("Entropy")
+plt.title("Entropy Vs temperature (At constant Volume)")
+plt.grid(ls = "--")
+plt.legend()
+plt.show()
+
+for i in range(len(T[:-1])):
+    en = entropy(U_array[i,:],T[:-1],np.log(S[:,i][:-1]))
+    en_array.append(en)
+    plt.plot(v[:-1],en,label = "T="+str(T[i]))
+plt.xlabel("Volume")
+plt.ylabel("Entropy")
+plt.title("Entropy Vs Volume (At constant Temperature)")
+plt.grid(ls = "--")
+plt.legend()
+plt.show()
+
+

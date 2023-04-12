@@ -1,0 +1,113 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+from scipy.integrate import quad
+
+# F.D.
+plt.style.use('bmh')
+k_b = 8.617 * 10 ** (-5)
+m = 0.511*10**(6)
+h = 4.1357 * (10**(-15))
+
+def magnitude_order(num):
+    if num == 0:
+        return 0
+
+    absnum = abs(num)
+    order = math.log10(absnum)
+    res = math.floor(order)
+
+    return res
+
+def N(T,k,e_n,u):
+    f1= e_n**(2) * (4*np.pi*(2*m)**(3/2)/(h**3))
+    den= (np.e**((e_n-u)/(k_b*T))) + k
+    return f1/den
+
+T=np.linspace(10,1000,500)
+
+u= 5.49   # Fermi Energy in eV for silver
+T_f= u/k_b   # Fermi Temprature
+
+T1=np.array([T_f/10])
+e=np.linspace(0,100,700)
+
+for j in T1:
+    Y = []
+    for i in e:
+        Y.append(N(j,1,i,u))
+    plt.plot(e,Y)
+#plt.grid()
+plt.xlabel("energy")
+plt.ylabel("dN/dE")
+plt.show()
+
+def func1(T,k,u,e_n,power):
+    return (((e_n/(k_b*T))**(power-1)) / (np.e**((e_n-u)/(k_b*T)) + k))
+
+def N(T,k,u,e_n,power):             #power= 1.5 for N/V and power=2.5 for U
+    f1= (k_b*T)**(power)
+    s=0
+    c= 4*np.pi*(2*m)**(3/2)/(h**3)
+    func= lambda e_n: func1(T,k,u,e_n,power)*((k_b*T))
+    p=quad(func, 0, e_n)
+    return p[0]*c*f1*(22.4)
+
+u= 0.005   # Fermi Energy in eV for silver
+T_f= u/k_b
+print(T_f)
+#print(N(200,1,0.005,5,1.5))
+
+power=[1.5,2.5]
+T=np.linspace(200,10**(9),10)
+
+for j in power:
+    Y=[]
+    for i in T:
+        Y.append(N(i,1,0.005,10,j))
+    plt.plot(T,Y)
+    plt.xlabel("Temperature (in K)")
+    if j==1.5:
+        plt.ylabel("N/V")
+    else:
+        plt.ylabel("U")
+    plt.show()
+
+'''#METHOD-2
+
+def N2(T,u):             #power= 1.5 for N/V and power=2.5 for U
+    c= 4*np.pi*(2*m)**(3/2)/(h**3)
+    N= (2/3)*c*(u**(3/2))*(1+ ((np.pi**2)/8)*((k_b*T/u)**2))
+    return N
+
+Y=[]
+for j in T:
+    Y.append(N2(j,0.005))
+plt.plot(T,Y)
+plt.show()
+'''
+#RELATIVISTIC
+
+def func2(T,k,u,e_n,power):
+    return (((e_n/(k_b*T))**(power-1)) / (np.e**((e_n-u)/(k_b*T)) + k))
+
+c= 3*10**(8)
+def N(T,k,u,e_n,power):             #power= 1.5 for N/V and power=2.5 for U
+    f1= (k_b*T)**(power)
+    s=0
+    c= 4*np.pi*(2*m)**(3/2)/(h**3)
+    func= lambda e_n: func2(T,k,u,e_n,power)*(k_b*T)
+    p=quad(func, 0, e_n)
+    return p[0]*c*f1*(22.4)
+
+for j in power:
+    Y=[]
+    for i in T:
+        Y.append(N(i,1,0.005,10,j))
+    plt.plot(T,Y)
+    plt.xlabel("Temperature (in K)")
+    if j==1.5:
+        plt.ylabel("N/V")
+    else:
+        plt.ylabel("U")
+    plt.show()

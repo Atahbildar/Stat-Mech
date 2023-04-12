@@ -1,0 +1,126 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+low_T = np.linspace(0,8000,100)
+high_T = np.linspace(5000,10**(5),100)
+
+e=[0,1,2]
+g=[1,1,1]
+k = 8.617 * 10**(-5)
+N = 1
+
+def z(T,e,g):
+    Z_list = []
+    for i in T:
+        Z = 0
+        for j,l in zip(e,g):
+            Z = Z + l * np.exp(-j/(k*i))
+        Z_list.append(Z)
+    return np.array(Z_list)
+plt.scatter(low_T,z(low_T,e,g))
+plt.scatter(high_T,z(high_T,e,g))
+plt.xlabel("T")
+plt.ylabel("Partition Function")
+plt.grid(ls='--')
+plt.title("Partition Function for all temperatures")
+plt.show()
+figure, axis = plt.subplots(1, 2)
+figure.suptitle("Partition Function")
+axis[0].scatter(low_T,z(low_T,e,g),c='g')
+axis[0].set_xlabel("T")
+axis[0].set_title("Low Temperature")
+axis[0].grid(ls='--')
+axis[1].scatter(high_T,z(high_T,e,g),c='r')
+axis[1].set_xlabel("T")
+axis[1].set_title("High Temperature")
+axis[1].grid(ls='--')
+plt.show()
+
+def fractional_prob(g,T,e,Z):
+    f_list = []
+    for j in range(len(e)):                                                                                             
+        frac_pop = (g[j] * np.exp(-e[j]/(k*T)))/Z
+        f_list.append(frac_pop)
+    f_list = np.array(f_list)
+    return f_list
+    #print(f_list)
+
+Z1 = z(low_T,e,g)
+Z2 = z(high_T,e,g)
+F1=fractional_prob(g,low_T,e,Z1)
+F2=fractional_prob(g,high_T,e,Z2)
+#fractional_prob(g,low_T,e,Z1)
+figure, axis = plt.subplots(1, 2)
+figure.suptitle("Probability Function")
+for i in range(len(F1)):
+    axis[0].scatter(low_T,F1[i],label ="e =" +str(e[i]))
+    axis[1].scatter(high_T,F2[i],label = "e =" +str(e[i]))
+axis[0].set_xlabel("T")
+axis[0].set_ylabel("Low Temperature")
+axis[0].legend()
+axis[0].set_ylabel("$\\dfrac{N_i}{N}$")
+axis[0].grid(ls='--')
+axis[1].set_xlabel("T")
+axis[1].legend()
+axis[1].set_ylabel("High Temperature")
+axis[1].set_ylabel("$\\dfrac{N_i}{N}$")
+axis[1].grid(ls='--')
+plt.show()
+
+def internal_energy(frac_pop,N,e,T):
+    N_j = N * frac_pop
+    int_ergy = np.zeros([len(T)])
+    for i in range(len(N_j)):
+        int_ergy = int_ergy + N_j[i]*e[i]
+    return int_ergy
+
+U1=internal_energy(F1,1,e,low_T)
+U2=internal_energy(F2,1,e,high_T)
+figure, axis = plt.subplots(1, 2)
+figure.suptitle("Internal Energy")
+axis[0].scatter(low_T,U1,c='g')
+axis[0].set_xlabel("T")
+axis[0].set_ylabel("U")
+axis[0].set_title("Low Temperature")
+axis[0].grid(ls='--')
+axis[1].scatter(high_T,U2,c='r')
+axis[1].set_xlabel("T")
+axis[1].set_ylabel("U")
+axis[1].set_title("High Temperature")
+axis[1].grid(ls='--')
+plt.show()
+
+def entropy(Z,N,T,U):
+    S = (N*k*np.log(Z)) + (U/T) + (N*k)
+    return S
+
+figure, axis = plt.subplots(1, 2)
+figure.suptitle("Entropy")
+axis[0].scatter(low_T,entropy(Z1,1,low_T,U1),c='g')
+axis[0].set_xlabel("T")
+axis[0].set_ylabel("S")
+axis[0].set_title("Low Temperature")
+axis[0].grid(ls='--')
+axis[1].scatter(high_T,entropy(Z2,1,high_T,U2),c='r')
+axis[1].set_xlabel("T")
+axis[1].set_ylabel("S")
+axis[1].set_title("High Temperature")
+axis[1].grid(ls='--')
+plt.show()
+
+def H_free_energy(N,T,Z):
+    F = -N*k*T*np.log(Z)
+    return F
+figure, axis = plt.subplots(1, 2)
+figure.suptitle("Helmholtz free energy")
+axis[0].scatter(low_T,H_free_energy(1,low_T,Z1),c='g')
+axis[0].set_xlabel("T")
+axis[0].set_ylabel("F")
+axis[0].set_title("Low Temperature")
+axis[0].grid(ls='--')
+axis[1].scatter(high_T,H_free_energy(1,high_T,Z2),c='r')
+axis[1].set_xlabel("T")
+axis[1].set_ylabel("F")
+axis[1].set_title("High Temperature")
+axis[1].grid(ls='--')
+plt.show()

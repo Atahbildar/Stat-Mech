@@ -1,0 +1,183 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+from scipy.integrate import quad
+
+# F.D.
+
+k_b = 8.617 * 10 ** (-5)
+m = 0.511*10**(6)
+h = 4.1357 * (10**(-15))
+
+def magnitude_order(num):
+    if num == 0:
+        return 0
+
+    absnum = abs(num)
+    order = math.log10(absnum)
+    res = math.floor(order)
+
+    return res
+
+def N(T,k,e_n,u):
+    f1= e_n**(2) * (4*np.pi*(2*m)**(3/2)/(h**3))
+    den= (np.e**((e_n-u)/(k_b*T))) + k
+    return f1/den
+
+T=np.linspace(10,1000,500)
+
+u= 5.49   # Fermi Energy in eV for silver
+T_f= u/k_b   # Fermi Temprature
+
+T1=np.array([T_f/(magnitude_order(T_f)),T_f/10,T_f])
+e=np.linspace(0,80,1000)
+
+for j in T1:
+    Y = []
+    for i in e:
+        Y.append(N(j,1,i,u))
+    plt.plot(e,Y,label='T= '+str(j) + 'K')
+plt.grid()
+plt.xlabel("e")
+plt.legend()
+plt.ylabel("dN/dE")
+plt.title("dN/dE VS Energy States for Fermi Dirac")
+plt.show()
+
+def func1(T,k,u,e_n,power):
+    return (((e_n/(k_b*T))**(power-1)) / (np.e**((e_n-u)/(k_b*T)) + k))
+
+def N(T,k,u,e_n,power):             #power= 1.5 for N/V and power=2.5 for U
+    f1= (k_b*T)**(power)
+    s=0
+    c= 4*np.pi*(2*m)**(3/2)/(h**3)
+    func= lambda e_n: func1(T,k,u,e_n,power)*(k_b*T)
+    p=quad(func, 0, e_n)
+    return p[0]*c*f1*(22.4)
+
+u= 5.47   # Fermi Energy in eV for silver
+T_f= u/k_b
+print(T_f)
+#print(N(200,1,0.005,5,1.5))
+
+power=[1.5,2.5]
+T=np.linspace(200,5000,10)
+
+for j in power:
+    Y=[]
+    for i in T:
+        Y.append(N(i,1,5.47,10,j))
+    plt.plot(T,Y)
+    plt.xlabel("Temperature (in K)")
+    if j==1.5:
+        plt.title("Number density VS Temperature States for Fermi Dirac")
+        plt.ylabel("N/V")
+    else:
+        plt.title("Internal Energy VS Temperature States for Fermi Dirac")
+        plt.ylabel("U")
+    plt.grid()
+    plt.show()
+
+#RELATIVISTIC
+
+def func2(T,k,u,e_n,val):
+    return (((e_n/(k_b*T))**(val)) / (np.e**((e_n-u)/(k_b*T)) + k))
+
+c_s= 3*10**(8)
+def N(T,k,u,e_n,power,val):             #power= 1.5 for N/V and power=2.5 for U
+    f1= (k_b*T)**(power)
+    s=0
+    c= 4*np.pi*(2*m)**(3/2)/((h*c_s)**3)
+    func= lambda e_n: func2(T,k,u,e_n,val)*(k_b*T)
+    p=quad(func, 0, e_n)
+    return p[0]*c*f1*(22.4)
+
+val=[2,3]
+Y=[]
+Y1=[]
+for i in T:
+    Y.append(N(i,1,0.005,10,1.5,2))
+plt.plot(T,Y)
+plt.xlabel("Temperature (in K)")
+plt.ylabel("N/V")
+plt.title("Number Density VS T for Fermi Dirac (Relativistic case)")
+plt.grid()
+plt.show()
+
+for i in T:
+    Y1.append(N(i,1,0.005,10,2.5,3))
+plt.plot(T,Y1)
+plt.xlabel("Temperature (in K)")
+plt.ylabel("U")
+plt.title("Internal Energy VS T for Fermi Dirac (Relativistic case)")
+plt.grid()
+plt.show()
+
+
+#BE:
+
+N=6.022*10**(50)
+V=1
+Tc= ((h**2)/(2*np.pi*m*k_b))*((N/(2.612*V))**(2/3))
+print(Tc)
+
+T1=np.linspace(10**(-10),Tc,10000)
+T2=np.linspace(Tc,Tc*1000,6000)
+print(T2)
+
+def func2(T,k,u,e_n,power):
+    return (((e_n)**(power))/ (np.e**((e_n-u)/(k_b*T)) + k))
+
+def E_be(T,V,u,e_n,power):
+    C = (2 * np.pi * (2 * m) ** (3 / 2)) / (h ** 3)
+    func = lambda e_n: func2(T, -1, u, e_n, power)
+    p = quad(func, 0, e_n)
+    print(p)
+    return p[0]*C*V
+
+Eg_calc=[]
+Eg=[]
+
+for i in T1:     # A=1 -------> u=0
+    Eg_calc.append(E_be(i,V,0,np.inf,1.5))
+    Eg.append(0.7001*N*k_b*( (i**(2.5))/(Tc**(1.5)) ))
+plt.plot(T1,Eg_calc)
+plt.plot(T1,Eg)
+plt.title('Temperature VS Energy Of Ground States (Below Critical Temperature)')
+#print(Eg_calc[-1]/(N*k_b*T1[-1]))
+plt.grid()
+plt.show()
+
+P=np.array(Eg_calc)*(2/3)
+plt.plot(T1,P)
+plt.title('Temperature VS Pressure (Below Critical Temperature)')
+plt.show()
+
+
+Ex_calc=[]
+Ex=[]
+
+for i in T2:
+    Ex_calc.append(E_be(i,V,-1,10,1.5))
+    #Ex.append(1.5*N*k_b*i*(1- (0.4618)*(Tc/i)**1.5))
+plt.plot(T2,Ex_calc)
+#plt.plot(T2,Ex)
+print(Ex_calc[-1]/(N*k_b*T2[-1]))
+plt.grid()
+plt.show()
+
+Cv=((np.array(Eg_calc)[:-1] - np.array(Eg_calc[1:]))/(T1[:-1] - T1[1:]))
+plt.scatter(T1[:-1]/(Tc),Cv/(N*k_b))
+plt.title("Cv VS T for T<=Tc")
+plt.grid()
+plt.show()
+
+Cv=((np.array(Ex_calc)[:-1] - np.array(Ex_calc[1:]))/(T2[:-1] - T2[1:]))
+plt.scatter(T2[:-1]/Tc,Cv/(N*k_b))
+plt.title("Cv VS T for T>Tc ")
+plt.grid()
+plt.show()
+
+
+
+
